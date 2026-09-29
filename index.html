@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<title>第4回ARK3ビンゴ！HARD</title>
+
+<style>
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    "Hiragino Kaku Gothic ProN",
+    "Yu Gothic",
+    sans-serif;
+
+  text-align: center;
+  color: #333;
+
+  background-image: url("bac.png");
+  background-size: 100% auto;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-color: #171142;
+
+  min-height: 100vh;
+
+  padding:
+    max(6px, env(safe-area-inset-top))
+    3px
+    max(20px, env(safe-area-inset-bottom));
+}
+
+
+/* ==============================
+   タイトル
+============================== */
+
+h1 {
+  margin: 5px 0 6px;
+
+  font-size: clamp(20px, 5.5vw, 32px);
+  font-weight: 900;
+
+  color: white;
+
+  text-shadow:
+    0 3px 5px rgba(0,0,0,.95),
+    0 0 12px rgba(0,0,0,.75);
+}
+
+
+/* ==============================
+   ボタン
+============================== */
+
+.controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin: 5px auto 4px;
+}
+
+button {
+  border: none;
+  border-radius: 999px;
+
+  padding: 11px 22px;
+
+  font-size: 14px;
+  font-weight: bold;
+
+  color: white;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 4px 10px rgba(0,0,0,.35);
+
+  transition: transform .1s ease;
+}
+
+button:active {
+  transform: scale(.94);
+}
+
+#newCard {
+  background:
+    linear-gradient(
+      135deg,
+      #ff4fa3,
+      #9567ff
+    );
+}
+
+
+/* ==============================
+   BINGO表示
+============================== */
+
+#bingo {
+  min-height: 42px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin: 0 auto;
+
+  font-size: clamp(24px, 7vw, 40px);
+  font-weight: 900;
+
+  color: white;
+
+  text-shadow:
+    0 3px 5px rgba(0,0,0,.95),
+    0 0 12px rgba(255,0,100,.9);
+}
+
+
+/* ==============================
+   7×7盤面
+============================== */
+
+#board {
+  display: grid;
+
+  grid-template-columns:
+    repeat(7, minmax(0, 1fr));
+
+  gap: 3px;
+
+  width: min(98vw, 650px);
+
+  margin: 0 auto;
+
+  padding: 5px;
+
+  border-radius: 15px;
+
+  background:
+    rgba(67,22,77,.48);
+
+  box-shadow:
+    0 5px 20px rgba(0,0,0,.5);
+
+  backdrop-filter: blur(1.5px);
+}
+
+
+/* ==============================
+   通常マス
+============================== */
+
+.cell {
+  aspect-ratio: 1 / 1;
+
+  min-width: 0;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  text-align: center;
+
+  padding: 2px;
+
+  border-radius: 6px;
+
+  background:
+    rgba(255,255,255,.82);
+
+  border:
+    1px solid rgba(255,255,255,.9);
+
+  font-size:
+    clamp(8px, 2.15vw, 12px);
+
+  font-weight: 700;
+
+  line-height: 1.15;
+
+  overflow-wrap: anywhere;
+
+  user-select: none;
+  cursor: pointer;
+
+  box-shadow:
+    inset 0 0 5px rgba(255,255,255,.8);
+
+  transition:
+    transform .12s ease,
+    background .18s ease,
+    color .18s ease;
+}
+
+.cell:active {
+  transform: scale(.93);
+}
+
+
+/* ==============================
+   緑：達成済み
+============================== */
+
+.cell.checked {
+  background: rgba(48,190,95,.94);
+  color: white;
+
+  text-shadow:
+    0 1px 3px rgba(0,0,0,.65);
+}
+
+
+/* ==============================
+   黄色：最後に押したマス
+============================== */
+
+.cell.last {
+  background: rgba(255,214,38,.97);
+
+  color: #222;
+  text-shadow: none;
+
+  box-shadow:
+    inset 0 0 0 3px rgba(255,255,255,.5),
+    0 0 10px rgba(255,220,0,.7);
+}
+
+
+/* ==============================
+   紫：リーチ
+============================== */
+
+.cell.reach {
+  background: rgba(157,92,255,.96);
+
+  color: white;
+
+  text-shadow:
+    0 1px 3px rgba(0,0,0,.65);
+
+  box-shadow:
+    inset 0 0 0 3px rgba(255,255,255,.4),
+    0 0 10px rgba(157,92,255,.7);
+}
+
+
+/* ==============================
+   ピンク：BINGO
+============================== */
+
+.cell.bingo-cell {
+  background: rgba(255,61,155,.97);
+
+  color: white;
+
+  text-shadow:
+    0 1px 3px rgba(0,0,0,.7);
+
+  box-shadow:
+    inset 0 0 0 3px rgba(255,255,255,.45),
+    0 0 12px rgba(255,40,145,.8);
+}
+
+
+/* ==============================
+   FREE
+============================== */
+
+.cell.free {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(67,198,255,.97),
+      rgba(157,105,255,.97)
+    );
+
+  color: white;
+  font-weight: 900;
+
+  text-shadow:
+    0 2px 3px rgba(0,0,0,.45);
+}
+
+.cell.free.bingo-cell {
+  background: rgba(255,61,155,.97);
+}
+
+
+/* ==============================
+   スマホ
+============================== */
+
+@media (max-width: 600px) {
+
+  body {
+    background-size: 100% auto;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  h1 {
+    font-size: 20px;
+
+    margin-top: 4px;
+    margin-bottom: 5px;
+  }
+
+  .controls {
+    margin-top: 4px;
+    margin-bottom: 3px;
+  }
+
+  button {
+    padding: 10px 18px;
+    font-size: 13px;
+  }
+
+  #bingo {
+    min-height: 40px;
+  }
+
+  #board {
+    width: 99vw;
+
+    gap: 2px;
+    padding: 3px;
+
+    margin: 0 auto;
+  }
+
+  .cell {
+    padding: 1px;
+
+    font-size: 8px;
+
+    border-radius: 5px;
+  }
+}
+
+
+@media (max-width: 360px) {
+
+  .cell {
+    font-size: 7.5px;
+  }
+
+  h1 {
+    font-size: 18px;
+  }
+
+  button {
+    padding: 9px 16px;
+    font-size: 12px;
+  }
+}
+
+</style>
+</head>
+
+
+<body>
+
+
+<h1>第4回ARK3ビンゴ！HARD</h1>
+
+
+<div class="controls">
+
+  <button
+    id="newCard"
+    onclick="generateNewBoard()">
+
+    🎲 カード再生成
+
+  </button>
+
+</div>
+
+
+<div id="bingo"></div>
+
+<div id="board"></div>
+
+
+<script>
+
+/* ==================================================
+   第4回ARK3ビンゴ
+
+   7×7 = 49マス
+   中央FREE
+
+   【第4回特別ルール】
+
+   ・エリア系は24～36枚
+   ・エリア系は重複OK
+
+   ・ステーション8種類は
+     それぞれ最大1枚
+
+   ・その他項目は重複OK
+================================================== */
+
+
+/* ==================================================
+   エリア系
+
+   ★このグループから必ず24～36枚
+   ★重複OK
+================================================== */
+
+const areaItems = [
+
+  "笹塚",
+  "南台",
+  "千駄ヶ谷",
+  "松濤",
+  "幡ヶ谷",
+  "松原",
+  "西新宿",
+  "西原",
+  "富ヶ谷",
+  "和田",
+
+  "堀之内",
+  "方南町",
+  "渋谷本町",
+  "中野本町",
+  "元代々木",
+  "弥生町",
+  "羽根木",
+  "大原",
+  "代々木",
+  "北沢",
+
+  "代田",
+  "下高井戸",
+  "初台",
+  "永福町",
+  "和泉",
+  "上原",
+  "大山",
+  "大宮",
+  "西永福",
+  "神山町"
+
+];
+
+
+/* ==================================================
+   その他パネル
+
+   ★重複OK
+================================================== */
+
+const otherItems = [
+
+  "タワマン",
+
+  "ネギ",
+
+  "アップル1",
+  "アップル2",
+  "アップル3",
+  "アップル4",
+
+  "バナナ1",
+  "バナナ2",
+  "バナナ3",
+  "バナナ4",
+
+  "キャロット1",
+  "キャロット2",
+  "キャロット3",
+  "キャロット4",
+
+  "荷物１つ",
+  "荷物２つ",
+  "荷物３つ",
+  "荷物４つ",
+
+  "階段５F",
+  "階段２F",
+  "階段３F",
+  "階段４F",
+
+  "戸建",
+  "店舗",
+  "持ち帰り",
+  "配達なし",
+  "雨配達",
+
+  "オートロック２個以上",
+
+  "野田さん！",
+  "金子さん！",
+  "矢田部さん！"
+
+];
+
+
+/* ==================================================
+   ステーション
+
+   ★それぞれ最大1枚
+================================================== */
+
+const stationItems = [
+
+  "五反田",
+  "新橋",
+  "麻布十番",
+  "南青山",
+  "三軒茶屋",
+  "自由が丘",
+  "北千束",
+  "大森"
+
+];
+
+
+/* ==================================================
+   第4回専用保存キー
+
+   ★第3回とは完全に別保存
+================================================== */
+
+const BOARD_KEY =
+  "ark3_bingo_fourth_board_v1";
+
+const CHECK_KEY =
+  "ark3_bingo_fourth_checks_v1";
+
+const LAST_KEY =
+  "ark3_bingo_fourth_last_v1";
+
+
+/* ==================================================
+   BINGOライン
+   7横 + 7縦 + 2斜め = 16ライン
+================================================== */
+
+const lines = [];
+
+
+/* 横 */
+
+for (let r = 0; r < 7; r++) {
+
+  const line = [];
+
+  for (let c = 0; c < 7; c++) {
+
+    line.push(
+      r * 7 + c
+    );
+
+  }
+
+  lines.push(line);
+
+}
+
+
+/* 縦 */
+
+for (let c = 0; c < 7; c++) {
+
+  const line = [];
+
+  for (let r = 0; r < 7; r++) {
+
+    line.push(
+      r * 7 + c
+    );
+
+  }
+
+  lines.push(line);
+
+}
+
+
+/* 左上 → 右下 */
+
+lines.push([
+  0,
+  8,
+  16,
+  24,
+  32,
+  40,
+  48
+]);
+
+
+/* 右上 → 左下 */
+
+lines.push([
+  6,
+  12,
+  18,
+  24,
+  30,
+  36,
+  42
+]);
+
+
+/* ==================================================
+   配列シャッフル
+================================================== */
+
+function shuffle(array) {
+
+  for (
+    let i = array.length - 1;
+    i > 0;
+    i--
+  ) {
+
+    const j =
+      Math.floor(
+        Math.random() * (i + 1)
+      );
+
+    [
+      array[i],
+      array[j]
+    ] = [
+      array[j],
+      array[i]
+    ];
+
+  }
+
+  return array;
+
+}
+
+
+/* ==================================================
+   ランダム取得
+================================================== */
+
+function randomFrom(array) {
+
+  return array[
+    Math.floor(
+      Math.random() * array.length
+    )
+  ];
+
+}
+
+
+/* ==================================================
+   新しいカード生成
+================================================== */
+
+function generateNewBoard() {
+
+  const selected = [];
+
+
+  /* ===============================================
+     STEP 1
+
+     エリア系の枚数を
+     24～36枚からランダム決定
+  =============================================== */
+
+  const areaCount =
+    Math.floor(
+      Math.random() * 13
+    ) + 24;
+
+
+  /* ===============================================
+     STEP 2
+
+     エリアパネルを抽選
+
+     重複OK
+  =============================================== */
+
+  for (
+    let i = 0;
+    i < areaCount;
+    i++
+  ) {
+
+    selected.push(
+      randomFrom(areaItems)
+    );
+
+  }
+
+
+  /* ===============================================
+     STEP 3
+
+     残り枚数
+  =============================================== */
+
+  const remaining =
+    48 - areaCount;
+
+
+  /* ===============================================
+     STEP 4
+
+     残りマス用候補を作る
+
+     その他パネルは何度でも出る。
+
+     ステーションだけ
+     一度出たら候補から削除する。
+  =============================================== */
+
+  const availableStations =
+    [...stationItems];
+
+
+  for (
+    let i = 0;
+    i < remaining;
+    i++
+  ) {
+
+
+    /*
+      今回の抽選候補
+
+      その他パネル
+      ＋
+      まだ出ていないステーション
+    */
+
+    const pool = [
+      ...otherItems,
+      ...availableStations
+    ];
+
+
+    const picked =
+      randomFrom(pool);
+
+
+    selected.push(
+      picked
+    );
+
+
+    /*
+      ステーションだった場合
+
+      同じステーションが
+      二度出ないように削除
+    */
+
+    const stationIndex =
+      availableStations.indexOf(
+        picked
+      );
+
+
+    if (
+      stationIndex !== -1
+    ) {
+
+      availableStations.splice(
+        stationIndex,
+        1
+      );
+
+    }
+
+  }
+
+
+  /* ===============================================
+     STEP 5
+
+     48枚全部シャッフル
+
+     エリア・その他・ステーションを
+     完全にバラバラにする
+  =============================================== */
+
+  shuffle(selected);
+
+
+  /* ===============================================
+     STEP 6
+
+     中央にFREEを入れる
+
+     index 24 = 中央
+  =============================================== */
+
+  selected.splice(
+    24,
+    0,
+    "FREE"
+  );
+
+
+  /* ===============================================
+     チェック状態
+  =============================================== */
+
+  const checked =
+    new Array(49)
+      .fill(false);
+
+
+  /*
+    FREEは最初からON
+  */
+
+  checked[24] =
+    true;
+
+
+  /* ===============================================
+     保存
+  =============================================== */
+
+  localStorage.setItem(
+    BOARD_KEY,
+    JSON.stringify(selected)
+  );
+
+
+  localStorage.setItem(
+    CHECK_KEY,
+    JSON.stringify(checked)
+  );
+
+
+  /*
+    最後に押したマスをリセット
+  */
+
+  localStorage.removeItem(
+    LAST_KEY
+  );
+
+
+  /* ===============================================
+     表示
+  =============================================== */
+
+  renderBoard(
+    selected,
+    checked,
+    null
+  );
+
+}
+
+
+/* ==================================================
+   盤面表示
+================================================== */
+
+function renderBoard(
+  boardData,
+  checkedData,
+  lastIndex
+) {
+
+  const board =
+    document.getElementById(
+      "board"
+    );
+
+
+  board.innerHTML = "";
+
+
+  boardData.forEach(
+    (item, index) => {
+
+
+      const cell =
+        document.createElement(
+          "div"
+        );
+
+
+      cell.classList.add(
+        "cell"
+      );
+
+
+      cell.dataset.index =
+        index;
+
+
+      /* =============================
+         FREE
+      ============================= */
+
+      if (
+        index === 24
+      ) {
+
+        cell.textContent =
+          "FREE";
+
+
+        cell.classList.add(
+          "free",
+          "checked"
+        );
+
+      }
+
+
+      /* =============================
+         オートロックだけ改行
+      ============================= */
+
+      else if (
+        item ===
+        "オートロック２個以上"
+      ) {
+
+        cell.innerHTML =
+          "オートロック<br>２個以上";
+
+      }
+
+
+      /* =============================
+         通常
+      ============================= */
+
+      else {
+
+        cell.textContent =
+          item;
+
+      }
+
+
+      /* =============================
+         達成済み
+      ============================= */
+
+      if (
+        checkedData[index] &&
+        index !== 24
+      ) {
+
+        cell.classList.add(
+          "checked"
+        );
+
+      }
+
+
+      /* =============================
+         FREE以外クリック可能
+      ============================= */
+
+      if (
+        index !== 24
+      ) {
+
+        cell.addEventListener(
+          "click",
+          function () {
+
+            toggleCell(
+              index
+            );
+
+          }
+        );
+
+      }
+
+
+      board.appendChild(
+        cell
+      );
+
+    }
+  );
+
+
+  updateColors(
+    checkedData,
+    lastIndex
+  );
+
+}
+
+
+/* ==================================================
+   マスをクリック
+================================================== */
+
+function toggleCell(index) {
+
+  const checked =
+    getChecked();
+
+
+  /* =============================
+     ON → OFF
+  ============================= */
+
+  if (
+    checked[index]
+  ) {
+
+    checked[index] =
+      false;
+
+
+    const currentLast =
+      getLastIndex();
+
+
+    if (
+      currentLast === index
+    ) {
+
+      localStorage.removeItem(
+        LAST_KEY
+      );
+
+    }
+
+  }
+
+
+  /* =============================
+     OFF → ON
+  ============================= */
+
+  else {
+
+    checked[index] =
+      true;
+
+
+    /*
+      最後に押したマス
+    */
+
+    localStorage.setItem(
+      LAST_KEY,
+      String(index)
+    );
+
+  }
+
+
+  /*
+    FREEは必ずON
+  */
+
+  checked[24] =
+    true;
+
+
+  /*
+    保存
+  */
+
+  localStorage.setItem(
+    CHECK_KEY,
+    JSON.stringify(checked)
+  );
+
+
+  /*
+    色更新
+  */
+
+  updateColors(
+    checked,
+    getLastIndex()
+  );
+
+}
+
+
+/* ==================================================
+   チェック状態取得
+================================================== */
+
+function getChecked() {
+
+  let checked = null;
+
+
+  try {
+
+    checked =
+      JSON.parse(
+        localStorage.getItem(
+          CHECK_KEY
+        )
+      );
+
+  }
+
+  catch (e) {}
+
+
+  if (
+    !Array.isArray(checked) ||
+    checked.length !== 49
+  ) {
+
+    checked =
+      new Array(49)
+        .fill(false);
+
+  }
+
+
+  checked[24] =
+    true;
+
+
+  return checked;
+
+}
+
+
+/* ==================================================
+   最後に押したマス取得
+================================================== */
+
+function getLastIndex() {
+
+  const value =
+    localStorage.getItem(
+      LAST_KEY
+    );
+
+
+  if (
+    value === null
+  ) {
+
+    return null;
+
+  }
+
+
+  const number =
+    Number(value);
+
+
+  if (
+    Number.isInteger(number) &&
+    number >= 0 &&
+    number < 49
+  ) {
+
+    return number;
+
+  }
+
+
+  return null;
+
+}
+
+
+/* ==================================================
+   色判定
+================================================== */
+
+function updateColors(
+  checked,
+  lastIndex
+) {
+
+  const cells =
+    [
+      ...document.querySelectorAll(
+        ".cell"
+      )
+    ];
+
+
+  /* ===============================================
+     一度色をリセット
+  =============================================== */
+
+  cells.forEach(
+    (cell, index) => {
+
+
+      cell.classList.remove(
+        "checked",
+        "last",
+        "reach",
+        "bingo-cell"
+      );
+
+
+      /*
+        FREE
+      */
+
+      if (
+        index === 24
+      ) {
+
+        cell.classList.add(
+          "free",
+          "checked"
+        );
+
+      }
+
+
+      /*
+        達成済み
+      */
+
+      else if (
+        checked[index]
+      ) {
+
+        cell.classList.add(
+          "checked"
+        );
+
+      }
+
+    }
+  );
+
+
+  /* ===============================================
+     完成したBINGOライン
+  =============================================== */
+
+  const completedLines =
+    lines.filter(
+      line =>
+
+        line.every(
+          index =>
+            checked[index]
+        )
+
+    );
+
+
+  /* ===============================================
+     BINGOに含まれるマス
+  =============================================== */
+
+  const bingoCells =
+    new Set();
+
+
+  completedLines.forEach(
+    line => {
+
+      line.forEach(
+        index => {
+
+          bingoCells.add(
+            index
+          );
+
+        }
+      );
+
+    }
+  );
+
+
+  /* ===============================================
+     リーチ判定
+
+     7マス中6マス達成
+     ↓
+     残り1マスを紫
+  =============================================== */
+
+  const reachCells =
+    new Set();
+
+
+  lines.forEach(
+    line => {
+
+
+      const missing =
+        line.filter(
+          index =>
+            !checked[index]
+        );
+
+
+      if (
+        missing.length === 1
+      ) {
+
+        reachCells.add(
+          missing[0]
+        );
+
+      }
+
+    }
+  );
+
+
+  /* ===============================================
+     黄色
+
+     最後に押した達成マス
+  =============================================== */
+
+  if (
+    lastIndex !== null &&
+    checked[lastIndex] &&
+    !bingoCells.has(
+      lastIndex
+    )
+  ) {
+
+    cells[lastIndex]
+      .classList
+      .add(
+        "last"
+      );
+
+  }
+
+
+  /* ===============================================
+     紫
+
+     リーチ
+  =============================================== */
+
+  reachCells.forEach(
+    index => {
+
+
+      if (
+        !checked[index] &&
+        !bingoCells.has(index)
+      ) {
+
+        cells[index]
+          .classList
+          .add(
+            "reach"
+          );
+
+      }
+
+    }
+  );
+
+
+  /* ===============================================
+     ピンク
+
+     BINGO完成ライン
+
+     最優先
+  =============================================== */
+
+  bingoCells.forEach(
+    index => {
+
+
+      cells[index]
+        .classList
+        .remove(
+          "last",
+          "reach"
+        );
+
+
+      cells[index]
+        .classList
+        .add(
+          "bingo-cell"
+        );
+
+    }
+  );
+
+
+  updateBingoText(
+    completedLines.length,
+    checked
+  );
+
+}
+
+
+/* ==================================================
+   BINGO表示
+================================================== */
+
+function updateBingoText(
+  bingoCount,
+  checked
+) {
+
+  const display =
+    document.getElementById(
+      "bingo"
+    );
+
+
+  /* =============================
+     全マス
+  ============================= */
+
+  if (
+    checked.every(Boolean)
+  ) {
+
+    display.textContent =
+      "🎉 ALL BINGO!! 🎉";
+
+  }
+
+
+  /* =============================
+     0ライン
+  ============================= */
+
+  else if (
+    bingoCount === 0
+  ) {
+
+    display.textContent =
+      "";
+
+  }
+
+
+  /* =============================
+     1ライン
+  ============================= */
+
+  else if (
+    bingoCount === 1
+  ) {
+
+    display.textContent =
+      "🎉 BINGO! 🎉";
+
+  }
+
+
+  /* =============================
+     2ライン以上
+  ============================= */
+
+  else {
+
+    display.textContent =
+      "🎉 " +
+      bingoCount +
+      " LINE! 🎉";
+
+  }
+
+}
+
+
+/* ==================================================
+   保存済みカード読込
+================================================== */
+
+function loadBoard() {
+
+  let boardData = null;
+
+  let checkedData = null;
+
+
+  try {
+
+    boardData =
+      JSON.parse(
+        localStorage.getItem(
+          BOARD_KEY
+        )
+      );
+
+
+    checkedData =
+      JSON.parse(
+        localStorage.getItem(
+          CHECK_KEY
+        )
+      );
+
+  }
+
+  catch (e) {}
+
+
+  /* ===============================================
+     保存済みカードあり
+  =============================================== */
+
+  if (
+
+    Array.isArray(
+      boardData
+    ) &&
+
+    boardData.length === 49 &&
+
+    Array.isArray(
+      checkedData
+    ) &&
+
+    checkedData.length === 49
+
+  ) {
+
+
+    /*
+      FREEは必ずON
+    */
+
+    checkedData[24] =
+      true;
+
+
+    renderBoard(
+      boardData,
+      checkedData,
+      getLastIndex()
+    );
+
+  }
+
+
+  /* ===============================================
+     初回
+  =============================================== */
+
+  else {
+
+    generateNewBoard();
+
+  }
+
+}
+
+
+/* ==================================================
+   起動
+================================================== */
+
+loadBoard();
+
+</script>
+
+</body>
+</html>
