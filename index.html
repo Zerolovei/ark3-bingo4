@@ -66,13 +66,15 @@ h1 {
 
 
 /* =========================
-   カード再生成
+   ボタン
 ========================= */
 
 .controls {
   display: flex;
   justify-content: center;
   align-items: center;
+
+  gap: 7px;
 
   margin: 4px auto;
 }
@@ -81,9 +83,9 @@ button {
   border: none;
   border-radius: 999px;
 
-  padding: 10px 18px;
+  padding: 10px 15px;
 
-  font-size: 13px;
+  font-size: 12px;
   font-weight: bold;
 
   color: white;
@@ -99,10 +101,58 @@ button {
 
   box-shadow:
     0 4px 10px rgba(0,0,0,.35);
+
+  transition:
+    opacity .2s ease,
+    transform .12s ease,
+    filter .2s ease;
 }
 
 button:active {
   transform: scale(.94);
+}
+
+
+/* =========================
+   ロック中の再生成ボタン
+========================= */
+
+#newCard.locked {
+  opacity: .42;
+
+  filter: grayscale(.7);
+
+  cursor: not-allowed;
+
+  background:
+    linear-gradient(
+      135deg,
+      #777,
+      #555
+    );
+}
+
+
+/* =========================
+   ロックボタン
+========================= */
+
+#lockButton {
+  background:
+    linear-gradient(
+      135deg,
+      #36b9ff,
+      #4268ff
+    );
+}
+
+#lockButton.is-locked {
+  background:
+    linear-gradient(
+      135deg,
+      #ff9c32,
+      #e94646
+    );
 }
 
 
@@ -189,11 +239,6 @@ button:active {
   width:
     min(99vw, 720px);
 
-  /*
-    ★今回変更
-    以前の1マス分の余白を削除
-    → 盤面を1マス分上へ
-  */
   margin:
     0
     auto
@@ -266,9 +311,7 @@ button:active {
 }
 
 
-/* =========================
-   緑：達成済み
-========================= */
+/* 達成済み */
 
 .cell.checked {
   background:
@@ -281,9 +324,7 @@ button:active {
 }
 
 
-/* =========================
-   黄色：最後に押した
-========================= */
+/* 最後に押した */
 
 .cell.last {
   background:
@@ -299,9 +340,7 @@ button:active {
 }
 
 
-/* =========================
-   紫：リーチ
-========================= */
+/* リーチ */
 
 .cell.reach {
   background:
@@ -318,9 +357,7 @@ button:active {
 }
 
 
-/* =========================
-   ピンク：BINGO
-========================= */
+/* BINGO */
 
 .cell.bingo-cell {
   background:
@@ -337,9 +374,7 @@ button:active {
 }
 
 
-/* =========================
-   FREE
-========================= */
+/* FREE */
 
 .cell.free {
   background:
@@ -365,7 +400,6 @@ button:active {
 
 /* =========================
    検索ヒット
-   元の色＋青発光
 ========================= */
 
 .cell.search-hit {
@@ -413,17 +447,10 @@ button:active {
 @media (max-width: 600px) {
 
   body {
-    background-size:
-      100% auto;
-
-    background-position:
-      center top;
-
-    background-repeat:
-      no-repeat;
-
-    background-attachment:
-      scroll;
+    background-size: 100% auto;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
   }
 
   h1 {
@@ -431,57 +458,35 @@ button:active {
   }
 
   button {
-    padding:
-      9px 15px;
-
-    font-size:
-      12px;
+    padding: 9px 11px;
+    font-size: 11px;
   }
 
   #panelSearch {
-    max-width:
-      185px;
-
-    font-size:
-      11px;
+    max-width: 185px;
+    font-size: 11px;
   }
 
   #bingo {
-    min-height:
-      35px;
+    min-height: 35px;
   }
 
   #board {
-    width:
-      99vw;
-
-    /*
-      ★ここも変更
-      11vw → 0
-    */
-    margin-top:
-      0;
-
-    gap:
-      2px;
-
-    padding:
-      3px;
+    width: 99vw;
+    margin-top: 0;
+    gap: 2px;
+    padding: 3px;
   }
 
   .cell {
-    font-size:
-      6.7px;
-
-    border-radius:
-      4px;
+    font-size: 6.7px;
+    border-radius: 4px;
   }
 
 }
 
 </style>
 </head>
-
 
 <body>
 
@@ -495,9 +500,18 @@ button:active {
 
   <button
     id="newCard"
-    onclick="generateNewBoard()">
+    onclick="requestNewBoard()">
 
     🎲 カード再生成
+
+  </button>
+
+
+  <button
+    id="lockButton"
+    onclick="toggleRegenerateLock()">
+
+    🔓 再生成ロック
 
   </button>
 
@@ -527,6 +541,7 @@ button:active {
 
 
 <script>
+
 
 /* ==================================================
    エリア系
@@ -573,7 +588,6 @@ const areaItems = [
 
 /* ==================================================
    その他候補
-   重複OK
 ================================================== */
 
 const normalItems = [
@@ -625,7 +639,6 @@ const normalItems = [
 /* ==================================================
    スタッフ
    最低1枚保証
-   複数OK
 ================================================== */
 
 const staffItems = [
@@ -656,10 +669,6 @@ const stationItems = [
 ];
 
 
-/* ==================================================
-   残り50枚用
-================================================== */
-
 const fullPool = [
 
   ...areaItems,
@@ -672,6 +681,9 @@ const fullPool = [
 
 /* ==================================================
    保存キー
+
+   ★既存3つは変更しない
+   ★ロック用だけ追加
 ================================================== */
 
 const BOARD_KEY =
@@ -683,10 +695,12 @@ const CHECK_KEY =
 const LAST_KEY =
   "ark3_bingo_fourth_9x9_last_v1";
 
+const LOCK_KEY =
+  "ark3_bingo_fourth_9x9_regenerate_lock_v1";
+
 
 /* ==================================================
    BINGOライン
-   横9 + 縦9 + 斜め2 = 20
 ================================================== */
 
 const lines = [];
@@ -694,19 +708,11 @@ const lines = [];
 
 /* 横 */
 
-for (
-  let r = 0;
-  r < 9;
-  r++
-) {
+for (let r = 0; r < 9; r++) {
 
   const line = [];
 
-  for (
-    let c = 0;
-    c < 9;
-    c++
-  ) {
+  for (let c = 0; c < 9; c++) {
 
     line.push(
       r * 9 + c
@@ -721,19 +727,11 @@ for (
 
 /* 縦 */
 
-for (
-  let c = 0;
-  c < 9;
-  c++
-) {
+for (let c = 0; c < 9; c++) {
 
   const line = [];
 
-  for (
-    let r = 0;
-    r < 9;
-    r++
-  ) {
+  for (let r = 0; r < 9; r++) {
 
     line.push(
       r * 9 + c
@@ -746,14 +744,11 @@ for (
 }
 
 
-/* 左上 → 右下 */
+/* 斜め */
 
 lines.push([
   0,10,20,30,40,50,60,70,80
 ]);
-
-
-/* 右上 → 左下 */
 
 lines.push([
   8,16,24,32,40,48,56,64,72
@@ -810,6 +805,136 @@ function shuffle(array) {
 
 
 /* ==================================================
+   ★ 再生成ロック判定
+================================================== */
+
+function isRegenerateLocked() {
+
+  return (
+    localStorage.getItem(
+      LOCK_KEY
+    ) === "locked"
+  );
+
+}
+
+
+/* ==================================================
+   ★ ロック切替
+================================================== */
+
+function toggleRegenerateLock() {
+
+  if (
+    isRegenerateLocked()
+  ) {
+
+    localStorage.setItem(
+      LOCK_KEY,
+      "unlocked"
+    );
+
+  }
+
+  else {
+
+    localStorage.setItem(
+      LOCK_KEY,
+      "locked"
+    );
+
+  }
+
+
+  updateLockDisplay();
+
+}
+
+
+/* ==================================================
+   ★ ロック表示
+================================================== */
+
+function updateLockDisplay() {
+
+  const newCardButton =
+    document.getElementById(
+      "newCard"
+    );
+
+
+  const lockButton =
+    document.getElementById(
+      "lockButton"
+    );
+
+
+  if (
+    isRegenerateLocked()
+  ) {
+
+    newCardButton.textContent =
+      "🔒 カード再生成";
+
+    newCardButton.classList.add(
+      "locked"
+    );
+
+
+    lockButton.textContent =
+      "🔒 ロック中";
+
+    lockButton.classList.add(
+      "is-locked"
+    );
+
+  }
+
+  else {
+
+    newCardButton.textContent =
+      "🎲 カード再生成";
+
+    newCardButton.classList.remove(
+      "locked"
+    );
+
+
+    lockButton.textContent =
+      "🔓 再生成ロック";
+
+    lockButton.classList.remove(
+      "is-locked"
+    );
+
+  }
+
+}
+
+
+/* ==================================================
+   ★ 再生成ボタン入口
+
+   ロック中なら何もしない
+================================================== */
+
+function requestNewBoard() {
+
+  if (
+    isRegenerateLocked()
+  ) {
+
+    return;
+
+  }
+
+
+  generateNewBoard();
+
+}
+
+
+/* ==================================================
    新規カード
 ================================================== */
 
@@ -851,10 +976,7 @@ function generateNewBoard() {
       );
 
 
-    /*
-      ステーションは
-      同じものを2枚入れない
-    */
+    /* ステーション重複禁止 */
 
     if (
       stationItems.includes(
@@ -887,7 +1009,7 @@ function generateNewBoard() {
   }
 
 
-  /* スタッフ最低1枚保証 */
+  /* スタッフ最低1枚 */
 
   const hasStaff =
     selected.some(
@@ -917,7 +1039,7 @@ function generateNewBoard() {
   }
 
 
-  /* 全80枚シャッフル */
+  /* シャッフル */
 
   shuffle(
     selected
@@ -1015,8 +1137,6 @@ function renderBoard(
         item;
 
 
-      /* FREE */
-
       if (
         index === 40
       ) {
@@ -1033,8 +1153,6 @@ function renderBoard(
       }
 
 
-      /* オートロック */
-
       else if (
         item ===
         "オートロック２個以上"
@@ -1046,8 +1164,6 @@ function renderBoard(
       }
 
 
-      /* 通常 */
-
       else {
 
         cell.textContent =
@@ -1055,8 +1171,6 @@ function renderBoard(
 
       }
 
-
-      /* FREE以外クリック */
 
       if (
         index !== 40
@@ -1274,8 +1388,6 @@ function updateColors(
     ];
 
 
-  /* 色リセット */
-
   cells.forEach(
     (cell, index) => {
 
@@ -1374,7 +1486,7 @@ function updateColors(
   );
 
 
-  /* 黄色 */
+  /* 最後に押したマス */
 
   if (
     lastIndex !== null &&
@@ -1393,7 +1505,7 @@ function updateColors(
   }
 
 
-  /* 紫 */
+  /* リーチ */
 
   reachCells.forEach(
     index => {
@@ -1417,7 +1529,7 @@ function updateColors(
   );
 
 
-  /* ピンク */
+  /* BINGO */
 
   bingoCells.forEach(
     index => {
@@ -1450,7 +1562,7 @@ function updateColors(
 
 
 /* ==================================================
-   BINGO表示
+   BINGO文字
 ================================================== */
 
 function updateBingoText(
@@ -1506,7 +1618,7 @@ function updateBingoText(
 
 
 /* ==================================================
-   検索プルダウン
+   検索メニュー
    五十音順
 ================================================== */
 
@@ -1546,7 +1658,7 @@ function buildSearchMenu() {
     "階段∞": "かいだんむげん",
 
     "金子さん！": "かねこさん",
-    "神山町": "かみやまちょう",
+    "神山町": "かみやまち",
 
     "北沢": "きたざわ",
     "北千束": "きたせんぞく",
@@ -1712,8 +1824,6 @@ function highlightSearch() {
     );
 
 
-  /* 一度解除 */
-
   cells.forEach(
     cell => {
 
@@ -1733,8 +1843,6 @@ function highlightSearch() {
 
   }
 
-
-  /* 同じ項目を全部青発光 */
 
   cells.forEach(
     cell => {
@@ -1843,8 +1951,10 @@ buildSearchMenu();
 
 loadBoard();
 
-</script>
+updateLockDisplay();
 
+
+</script>
 
 </body>
 </html>
